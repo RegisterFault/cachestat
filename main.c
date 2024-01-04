@@ -1,21 +1,17 @@
 #include <stdio.h>
-#include <sys/mman.h>
-#include <sys/types.h>
+#include <stdlib.h>
+#include <linux/mman.h>
 #include <unistd.h>
 #include <asm/unistd_64.h>
-#include <limits.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <string.h>
-#include <malloc.h>
-#include <assert.h>
-#include <linux/mman.h>
 
 void runCachestat(int fd, struct cachestat *cs) {
+	//tell cachestat to look at the whole file's cache
 	struct cachestat_range cr = {
 		.off = 0,
 		.len = 0,
 	};
+	
 	//cachestat still not implemented in glibc
 	if (syscall(__NR_cachestat,fd, &cr, cs, 0) == -1) {
 		perror("cachestat");
@@ -33,14 +29,15 @@ void runCachestat(int fd, struct cachestat *cs) {
 int main( int argc, char **argv){
 	if (argc != 2) {
 		fprintf(stderr, "Failed to find argument for file name\n");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}	
 
 	FILE *f = fopen(argv[1], "w");
 	if (f == NULL) {
 		perror("fopen");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
+
 	struct cachestat cs;
 	runCachestat(fileno(f), &cs);
 }
